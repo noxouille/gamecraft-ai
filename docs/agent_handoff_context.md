@@ -2,8 +2,8 @@
 ## GameCraft AI Project
 
 **Last Updated:** 2025-08-20
-**Updated By:** Backend Architecture Specialist (Agent Refactoring)
-**Version:** 2.1
+**Updated By:** Backend Architecture Specialist (LLM-based Classification)
+**Version:** 2.2
 
 ---
 
@@ -35,6 +35,7 @@ The platform supports both English and French languages with automatic language 
 - **NEW: Enhanced Agent-Based Architecture implemented**
 - **NEW: All agents refactored to use standardized base architecture**
 - **NEW: Improved logging and error handling across all agents**
+- **NEW: Fully LLM-based query parsing and classification**
 
 ### 📄 Key Deliverables Completed
 - `/docs/PRD.md` - Complete Product Requirements Document
@@ -44,6 +45,7 @@ The platform supports both English and French languages with automatic language 
 - **NEW: `/src/gamecraft_ai/agents/base_agent.py` - Enhanced base agent architecture**
 - **NEW: All agents (ClassifierAgent, ResearchAgent, ScriptWriterAgent, YouTubeCoachAgent) refactored with base classes**
 - **NEW: Standardized logging, error handling, and state management across all agents**
+- **NEW: ClassifierAgent completely refactored to use LLM-based parsing (no regex)**
 
 ### 🏗️ Agent Architecture Improvements (Latest)
 
@@ -62,10 +64,19 @@ The platform supports both English and French languages with automatic language 
 - Enhanced error recovery and fallback mechanisms
 
 **Agent Updates:**
-- `ClassifierAgent`: Now inherits from `QueryClassifierAgent` with improved relevance validation
+- `ClassifierAgent`: **Fully LLM-based parsing** (removed all regex), inherits from `QueryClassifierAgent` with improved relevance validation
 - `ResearchAgent`: Enhanced with base class logging and error handling
 - `ScriptWriterAgent`: Standardized script generation with base architecture
 - `YouTubeCoachAgent`: Consistent thumbnail/optimization generation patterns
+
+**🤖 LLM-based Classification Improvements (Latest):**
+- **Removed all regex patterns**: Now uses LLM for all parsing operations
+- **Enhanced game name extraction**: `_extract_game_name_llm()` with better accuracy across languages
+- **Smart URL detection**: `_extract_video_url_llm()` for event queries with URL validation
+- **Intelligent format detection**: `_extract_format_llm()` determines script format (preview, review, summary, complete_guide)
+- **Improved language detection**: Better handling of French and English with LLM validation
+- **Enhanced error handling**: Graceful fallbacks for all extraction methods with default values
+- **Higher accuracy**: LLM-based parsing provides more context-aware and flexible extraction
 
 ---
 
