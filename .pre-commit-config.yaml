@@ -17,9 +17,10 @@ repos:
         args: [--fix]
       - id: ruff-format
 
-  - repo: https://github.com/pre-commit/mirrors-mypy
-    rev: v1.5.1
-    hooks:
-      - id: mypy
-        args: [--config-file=mypy.ini]
-        files: ^src/
+# Mypy disabled per user request
+#  - repo: https://github.com/pre-commit/mirrors-mypy
+#    rev: v1.5.1
+#    hooks:
+#      - id: mypy
+#        args: [--config-file=mypy.ini]
+#        files: ^src/

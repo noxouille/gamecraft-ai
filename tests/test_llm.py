@@ -8,7 +8,7 @@ from pathlib import Path
 # Add parent directory to path for imports
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from src.gamecraft_ai.services.llm import LLMService
+from src.gamecraft_ai.services.llm import LLMService  # noqa: E402
 
 
 def test_basic_generation(service: LLMService, prompt: str) -> None:
