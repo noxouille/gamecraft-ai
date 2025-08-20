@@ -27,7 +27,8 @@ class ResearchAgent:
         """Main research method that handles both game and event queries"""
         query = state["query"]
         query_type = query.query_type
-        language = query.language
+        # Convert Language enum to string value
+        language = query.language.value if hasattr(query.language, "value") else str(query.language)
 
         try:
             if query_type == QueryType.GAME:

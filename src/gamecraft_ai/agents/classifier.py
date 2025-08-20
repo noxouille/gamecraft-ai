@@ -110,6 +110,7 @@ class ClassifierAgent:
 
         # Simple extraction patterns
         patterns = [
+            r"for\s+([^.!?]+?)(?:\s*$|\.|\?|!)",
             r"about\s+([^.!?]+?)(?:\s*$|\.|\?|!)",
             r"of\s+([^.!?]+?)(?:\s*$|\.|\?|!)",
             r"sur\s+([^.!?]+?)(?:\s*$|\.|\?|!)",
