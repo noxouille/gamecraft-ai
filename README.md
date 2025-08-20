@@ -2,24 +2,40 @@
 
 **AI-powered YouTube video summary and script generator for gaming content creators**
 
-Generate professional gaming content scripts from simple queries in English or French. Built with LangGraph, Gradio, and Pydantic for a minimal but powerful architecture.
+A streamlined 3-agent AI system that helps YouTube gaming content creators produce professional video content. Generate production-ready scripts, research data, video footage links, and viral thumbnail strategies from simple natural language queries in English or French.
 
 ## ✨ Features
 
-- **🎯 Dual Mode**: Event summaries or game reviews
-- **🌍 Bilingual**: English and French support with automatic language detection
-- **🔍 Smart Research**: Automatic game info, media, and review aggregation
-- **📝 Multiple Formats**: Review, preview, complete guide templates
-- **⚡ Fast Processing**: Results in under 60 seconds
+### **Core 3-Agent System (User-Facing)**
+1. **🎬 Script Writer Agent**: Creates production-ready video scripts with timestamps for games/events
+2. **🔍 Research Agent**: Finds official YouTube trailer links and gathers comprehensive game/event data
+3. **🎨 YouTube Coach Agent**: Generates 3 viral thumbnail prompts for image generation services
+
+*Note: Classifier Agent handles routing but is not part of the core user-facing workflow*
+
+### **Key Capabilities**
+- **🎯 Dual Content Types**: Game reviews/previews + Event coverage summaries
+- **🌍 Bilingual Support**: English and French with automatic language detection
+- **🎪 User-Selectable AI Models**: 6 options (GPT-4o, Claude-3.5-Sonnet, etc.)
+- **📋 4-Tab Output**: Script, Research Data, YouTube Links, Thumbnail Ideas
+- **⏱️ Target Duration**: 5-20 minutes with proper script structuring
+- **⚡ Fast Processing**: <60 seconds for game content, <5 minutes for events
 - **🎨 Modern UI**: Clean Gradio interface with real-time progress
 
 ## 🏗️ Architecture
 
-**Minimal Agent Design (4 agents total):**
-- **Classifier Agent**: Query type and language detection
-- **Game Researcher Agent**: Combined game info + media + reviews
-- **Event Analyzer Agent**: Video analysis for gaming events
-- **Script Writer Agent**: Multi-format script generation
+### **3-Agent System (Per PRD)**
+Based on the latest PRD, the system uses 3 core user-facing agents:
+
+**Core Agents:**
+- **🎬 Script Writer Agent**: Multi-format script generation (review, preview, complete guide, event summary)
+- **🔍 Research Agent**: Combined game info + media discovery + review aggregation + YouTube trailer search
+- **🎨 YouTube Coach Agent**: Viral thumbnail strategy + AI-ready image generation prompts
+
+**Supporting Infrastructure:**
+- **🤖 Classifier Agent**: Query routing and parameter extraction (internal)
+- **📊 Event Analysis**: Video processing for event content (internal)
+- **🎯 Trailer Finding**: Media discovery for announced games (internal)
 
 **Tech Stack:**
 - **LangGraph**: Multi-agent orchestration
@@ -87,19 +103,25 @@ make run  # Uses uv internally
 
 Open your browser to `http://localhost:8000` and try:
 
-**Game Review Example:**
+**Game Review Examples:**
 ```
 Make a 10-minute review video about Baldur's Gate 3
+Create a 15-minute video about Starfield
+Make a preview video about GTA 6
+Create everything you need to know about Hollow Knight Silksong
 ```
 
-**Event Summary Example:**
+**Event Summary Examples:**
 ```
-Make a 15-minute summary of Xbox Showcase [YouTube URL]
+Make a 15-min summary of Xbox Showcase [URL]
+Make a 20-minute summary of E3 2025 showcase [URL]
 ```
 
-**French Example:**
+**French Examples:**
 ```
+Crée une vidéo de 20 minutes sur Hogwarts Legacy
 Fais une critique de 10 minutes de Spider-Man 2
+Fais un résumé de 15 minutes du Nintendo Direct [URL]
 ```
 
 ## 📁 Project Structure
@@ -173,12 +195,29 @@ LOG_LEVEL=INFO
 - "Fais une critique de 15 minutes de [Nom du Jeu]"
 - "Crée un résumé de 10 minutes du [Event] [URL]"
 
-### Generated Output
+### Generated Output (4-Tab Structure)
 
-Each query produces:
-- **📜 Script**: Timestamped, production-ready script
-- **ℹ️ Metadata**: Processing info, language, timing
-- **🔍 Research Data**: Game info, media assets, review scores
+Each query produces comprehensive content for video production:
+
+**📜 Script Tab**
+- Production-ready timestamped scripts
+- Multiple formats: review, preview, summary, complete guide
+- Bilingual support with proper gaming terminology
+
+**🔍 Research Data Tab**
+- Game information (developer, publisher, release date, platforms)
+- Critical reception and review scores
+- Key features and talking points
+
+**🎥 YouTube Links Tab**
+- Official trailers (announcement, gameplay, launch)
+- Review videos from major outlets
+- Developer interviews and behind-the-scenes content
+
+**🖼️ Thumbnail Ideas Tab**
+- 3 AI-ready image generation prompts
+- Viral thumbnail strategies and design tips
+- Color schemes and mobile optimization guidelines
 
 ## 🛠️ Development
 
@@ -225,17 +264,42 @@ uv run pytest --cov=src --cov-report=html
 
 ## 🔄 LangGraph Workflow
 
-Simple linear flow with conditional routing:
+**3-Agent Processing Pipeline:**
 
-```
-START → Classifier → [Game Research | Event Analysis] → Script Writer → END
+```mermaid
+graph TD
+    Start([User Query]) --> Classifier{Classifier Agent}
+
+    Classifier -->|GAME Query| GamePath[Game Content Path]
+    Classifier -->|EVENT Query| EventPath[Event Content Path]
+
+    %% Game Content Path (Parallel Processing)
+    GamePath --> ScriptWriter1[Script Writer Agent<br/>Game Templates]
+    GamePath --> ResearchAgent[Research Agent<br/>Game Info + Media]
+    GamePath --> YouTubeCoach1[YouTube Coach Agent<br/>Thumbnail Ideas]
+
+    ScriptWriter1 --> GameOutput[4-Tab Output]
+    ResearchAgent --> GameOutput
+    YouTubeCoach1 --> GameOutput
+
+    %% Event Content Path (Sequential + Final Parallel)
+    EventPath --> EventAnalyzer[Event Analyzer<br/>Video Analysis]
+    EventAnalyzer --> ScriptWriter2[Script Writer Agent<br/>Event Templates]
+    EventAnalyzer --> TrailerFinder[Trailer Finder<br/>Find Game Trailers]
+
+    ScriptWriter2 --> EventOutput[Event Content]
+    TrailerFinder --> EventOutput
+    EventOutput --> YouTubeCoach2[YouTube Coach Agent<br/>Event Thumbnails]
+    YouTubeCoach2 --> EventFinalOutput[4-Tab Output]
 ```
 
-**State Management:**
-- Pydantic models ensure type safety
-- All data flows through unified state
-- Error handling at each node
-- Caching for performance
+**Key Features:**
+- **Conditional Routing**: Game vs Event content paths
+- **Parallel Processing**: Game path agents run simultaneously for speed
+- **Sequential + Parallel**: Event path optimizes for accuracy then speed
+- **Unified Output**: Both paths produce the same 4-tab structure
+- **Error Handling**: Graceful fallbacks at each node
+- **Caching**: Redis/memory caching for performance
 
 ## 🚨 Troubleshooting
 
@@ -266,12 +330,16 @@ START → Classifier → [Game Research | Event Analysis] → Script Writer → 
 
 ## 📈 Performance
 
-**Target Metrics (MVP):**
-- Query classification: <500ms
-- Game content generation: <60 seconds
-- Event processing: <5 minutes
-- Information accuracy: >95%
-- Concurrent users: 10
+**Target Metrics (3-Agent System):**
+- **Query classification**: <500ms
+- **Script Writer Agent**: <30 seconds
+- **Research Agent**: <20 seconds (info gathering + YouTube search)
+- **YouTube Coach Agent**: <10 seconds (thumbnail suggestions)
+- **Total processing**: <60 seconds for game content, <5 minutes for events
+- **Information accuracy**: >95% for game details
+- **Trailer match rate**: >90% for requested games
+- **User script acceptance**: >80% (minimal edits needed)
+- **Concurrent users**: 10
 
 ## 🤝 Contributing
 
