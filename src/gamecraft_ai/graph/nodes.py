@@ -1,5 +1,4 @@
-from ..agents import ClassifierAgent, EventAnalyzerAgent, GameResearcherAgent, ScriptWriterAgent
-from ..models import QueryType
+from ..agents import ClassifierAgent, ResearchAgent, ScriptWriterAgent
 from .state import GameCraftState
 
 
@@ -9,13 +8,11 @@ class NodeManager:
     def __init__(
         self,
         classifier: ClassifierAgent,
-        game_researcher: GameResearcherAgent,
-        event_analyzer: EventAnalyzerAgent,
+        researcher: ResearchAgent,
         script_writer: ScriptWriterAgent,
     ):
         self.classifier = classifier
-        self.game_researcher = game_researcher
-        self.event_analyzer = event_analyzer
+        self.researcher = researcher
         self.script_writer = script_writer
 
     def classify_node(self, state: GameCraftState) -> GameCraftState:
@@ -30,28 +27,16 @@ class NodeManager:
             state["errors"].append(f"Classification error: {str(e)}")
             return state
 
-    def game_research_node(self, state: GameCraftState) -> GameCraftState:
-        """Game research node"""
+    def research_node(self, state: GameCraftState) -> GameCraftState:
+        """Research node (handles both game and event research)"""
         try:
-            state["current_step"] = "game_research"
-            updated_state = self.game_researcher.research_game(dict(state))
+            state["current_step"] = "research"
+            updated_state = self.researcher.conduct_research(dict(state))
             state.update(updated_state)  # type: ignore[typeddict-item]
-            state["completed_steps"].append("game_research")
+            state["completed_steps"].append("research")
             return state
         except Exception as e:
-            state["errors"].append(f"Game research error: {str(e)}")
-            return state
-
-    def event_analysis_node(self, state: GameCraftState) -> GameCraftState:
-        """Event analysis node"""
-        try:
-            state["current_step"] = "event_analysis"
-            updated_state = self.event_analyzer.analyze_event(dict(state))
-            state.update(updated_state)  # type: ignore[typeddict-item]
-            state["completed_steps"].append("event_analysis")
-            return state
-        except Exception as e:
-            state["errors"].append(f"Event analysis error: {str(e)}")
+            state["errors"].append(f"Research error: {str(e)}")
             return state
 
     def script_generation_node(self, state: GameCraftState) -> GameCraftState:
@@ -81,12 +66,12 @@ class NodeManager:
         return state
 
 
-def should_process_game(state: GameCraftState) -> str:
-    """Conditional edge function for game processing"""
-    if state["query"].query_type == QueryType.GAME:
-        return "game_research"
+def should_continue_to_research(state: GameCraftState) -> str:
+    """Conditional edge function for research processing"""
+    if state["errors"]:
+        return "finish"
     else:
-        return "event_analysis"
+        return "research"
 
 
 def should_continue_to_script(state: GameCraftState) -> str:

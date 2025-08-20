@@ -3,10 +3,10 @@ from typing import Any
 
 from langgraph.graph import END, StateGraph
 
-from ..agents import ClassifierAgent, EventAnalyzerAgent, GameResearcherAgent, ScriptWriterAgent
+from ..agents import ClassifierAgent, ResearchAgent, ScriptWriterAgent
 from ..services import IGDBService, LLMService, YouTubeService
 from ..utils.cache import CacheService
-from .nodes import NodeManager, should_continue_to_script, should_process_game
+from .nodes import NodeManager, should_continue_to_research, should_continue_to_script
 from .state import GameCraftState, create_initial_state
 
 
@@ -22,18 +22,11 @@ class WorkflowManager:
 
         # Initialize agents
         self.classifier = ClassifierAgent(self.llm_service)
-        self.game_researcher = GameResearcherAgent(
-            self.igdb_service, self.youtube_service, self.cache_service
-        )
-        self.event_analyzer = EventAnalyzerAgent(
-            self.youtube_service, self.llm_service, self.cache_service
-        )
+        self.researcher = ResearchAgent(self.igdb_service, self.youtube_service, self.cache_service)
         self.script_writer = ScriptWriterAgent(self.llm_service)
 
         # Initialize node manager
-        self.node_manager = NodeManager(
-            self.classifier, self.game_researcher, self.event_analyzer, self.script_writer
-        )
+        self.node_manager = NodeManager(self.classifier, self.researcher, self.script_writer)
 
         # Create workflow
         self.workflow = self._create_workflow()
@@ -45,8 +38,7 @@ class WorkflowManager:
 
         # Add nodes
         workflow.add_node("classify", self.node_manager.classify_node)
-        workflow.add_node("game_research", self.node_manager.game_research_node)
-        workflow.add_node("event_analysis", self.node_manager.event_analysis_node)
+        workflow.add_node("research", self.node_manager.research_node)
         workflow.add_node("script_generation", self.node_manager.script_generation_node)
         workflow.add_node("finish", self.node_manager.finish_node)
 
@@ -56,19 +48,13 @@ class WorkflowManager:
         # Add conditional edges
         workflow.add_conditional_edges(
             "classify",
-            should_process_game,
-            {"game_research": "game_research", "event_analysis": "event_analysis"},
+            should_continue_to_research,
+            {"research": "research", "finish": "finish"},
         )
 
-        # Both research paths go to script generation
+        # Research goes to script generation
         workflow.add_conditional_edges(
-            "game_research",
-            should_continue_to_script,
-            {"script_generation": "script_generation", "finish": "finish"},
-        )
-
-        workflow.add_conditional_edges(
-            "event_analysis",
+            "research",
             should_continue_to_script,
             {"script_generation": "script_generation", "finish": "finish"},
         )
@@ -92,11 +78,8 @@ class WorkflowManager:
             # Reinitialize with new model
             self.llm_service = LLMService(model=model)
             self.classifier = ClassifierAgent(self.llm_service)
-            self.game_researcher = GameResearcherAgent(
+            self.researcher = ResearchAgent(
                 self.igdb_service, self.youtube_service, self.cache_service
-            )
-            self.event_analyzer = EventAnalyzerAgent(
-                self.youtube_service, self.llm_service, self.cache_service
             )
             self.script_writer = ScriptWriterAgent(self.llm_service)
 
