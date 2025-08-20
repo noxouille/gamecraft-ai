@@ -11,6 +11,16 @@ class ScriptOutput(BaseModel):
     format_type: str = Field(..., description="Script format (review, preview, event)")
     language: str = Field(..., description="Script language")
 
+
+class ThumbnailSuggestion(BaseModel):
+    """YouTube thumbnail suggestion with AI prompt"""
+
+    style: str = Field(..., description="Thumbnail style category")
+    prompt: str = Field(..., description="AI image generation prompt")
+    description: str = Field(..., description="Human-readable description")
+    target_ctr: str = Field(..., description="Expected click-through rate")
+    design_notes: list[str] = Field(default_factory=list, description="Design tips and rationale")
+
     class Config:
         example = {
             "title": "Baldur's Gate 3 - Complete Review",

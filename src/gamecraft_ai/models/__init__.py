@@ -1,5 +1,5 @@
 from .content import EventInfo, GameInfo, MediaAsset, ReviewScore
-from .output import ProcessingResult, ScriptOutput
+from .output import ProcessingResult, ScriptOutput, ThumbnailSuggestion
 from .query import Language, QueryInput, QueryType
 
 __all__ = [
@@ -11,5 +11,6 @@ __all__ = [
     "ReviewScore",
     "EventInfo",
     "ScriptOutput",
+    "ThumbnailSuggestion",
     "ProcessingResult",
 ]

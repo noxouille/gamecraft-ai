@@ -1,42 +1,47 @@
 from typing import Any
 
-from ..models import QueryType, ScriptOutput
+from ..models import ReviewScore, ScriptOutput
 from ..services.llm import LLMService
 
 
 class ScriptWriterAgent:
-    """Script generation agent"""
+    """Enhanced script generation agent that uses research data"""
 
     def __init__(self, llm_service: LLMService):
         self.llm = llm_service
 
     def write_script(self, state: dict[str, Any]) -> dict[str, Any]:
-        """Generate script based on collected information"""
+        """Generate script based on research data"""
         query = state["query"]
         query_type = query.query_type
         language = query.language
         duration = query.duration_minutes
         script_format = state["query_metadata"].get("script_format", "review")
+        research_type = state.get("research_type", "game")
 
-        if query_type == QueryType.GAME:
-            script = self._write_game_script(state, language, duration, script_format)
-        elif query_type == QueryType.EVENT:
-            script = self._write_event_script(state, language, duration)
-        else:
-            state["errors"].append("Unknown query type for script generation")
-            return state
+        try:
+            if research_type == "game":
+                script = self._write_game_script(state, language, duration, script_format)
+            elif research_type == "event":
+                script = self._write_event_script(state, language, duration)
+            else:
+                state["errors"].append(f"Unknown research type: {research_type}")
+                return state
 
-        if script:
-            state["script"] = script
-        else:
-            state["errors"].append("Failed to generate script")
+            if script:
+                state["script"] = script
+            else:
+                state["errors"].append("Failed to generate script")
+
+        except Exception as e:
+            state["errors"].append(f"Script generation failed: {str(e)}")
 
         return state
 
     def _write_game_script(
         self, state: dict[str, Any], language: str, duration: int, script_format: str
     ) -> ScriptOutput | None:
-        """Write script for game content"""
+        """Write script for game content using research data"""
         try:
             game_info = state.get("game_info")
             media_assets = state.get("media_assets", [])
@@ -45,7 +50,11 @@ class ScriptWriterAgent:
             if not game_info:
                 return None
 
-            # Create script prompt based on format
+            # Handle both single GameInfo and list of GameInfo
+            if isinstance(game_info, list) and game_info:
+                game_info = game_info[0]  # Use first game for primary script
+
+            # Create script template based on format
             template = self._get_script_template(script_format, language, duration)
 
             # Create timestamps for template
@@ -53,38 +62,33 @@ class ScriptWriterAgent:
             end_gameplay = min(duration - 3, int(duration * 0.6))
             end_review = min(duration - 1, int(duration * 0.9))
 
-            # Prepare context data
+            # Prepare context data from research
+            game_name = self._extract_value(game_info, "name", "Unknown Game")
+            developer = self._extract_value(game_info, "developer", "Unknown Developer")
+            publisher = self._extract_value(game_info, "publisher", "Unknown Publisher")
+            platforms = self._extract_platforms(game_info)
+            genre = self._extract_value(game_info, "genre", "Gaming")
+            description = self._extract_value(game_info, "description", "")
+
+            # Build trailer information from media assets
+            trailers = [asset for asset in media_assets if "trailer" in asset.asset_type]
+            trailer_info = (
+                f"{len(trailers)} official trailers available" if trailers else "Trailers available"
+            )
+
+            # Build review summary
+            review_summary = self._build_review_summary(review_scores)
+
             context = {
-                "game_name": game_info.name
-                if hasattr(game_info, "name")
-                else game_info.get("name", "Unknown Game"),
-                "developer": game_info.developer
-                if hasattr(game_info, "developer")
-                else game_info.get("developer", "Unknown Developer"),
-                "publisher": game_info.publisher
-                if hasattr(game_info, "publisher")
-                else game_info.get("publisher", "Unknown Publisher"),
-                "platforms": ", ".join(
-                    game_info.platforms
-                    if hasattr(game_info, "platforms")
-                    else game_info.get("platforms", [])
-                )
-                or "Various",
-                "genre": (
-                    game_info.genre if hasattr(game_info, "genre") else game_info.get("genre")
-                )
-                or "Gaming",
-                "description": (
-                    game_info.description
-                    if hasattr(game_info, "description")
-                    else game_info.get("description")
-                )
-                or "",
+                "game_name": game_name,
+                "developer": developer,
+                "publisher": publisher,
+                "platforms": platforms,
+                "genre": genre,
+                "description": description,
                 "media_count": len(media_assets),
-                "review_scores": ", ".join(
-                    [f"{score.outlet_name}: {score.score}" for score in review_scores[:3]]
-                )
-                or "No reviews available",
+                "trailer_info": trailer_info,
+                "review_scores": review_summary,
                 "duration": duration,
                 "end_gameplay": f"{end_gameplay:02d}:00",
                 "end_review": f"{end_review:02d}:00",
@@ -93,11 +97,6 @@ class ScriptWriterAgent:
             # Generate script content
             script_content = template.format(**context)
 
-            game_name = (
-                game_info.name
-                if hasattr(game_info, "name")
-                else game_info.get("name", "Unknown Game")
-            )
             return ScriptOutput(
                 title=f"{game_name} - {script_format.replace('_', ' ').title()}",
                 duration_minutes=duration,
@@ -111,58 +110,88 @@ class ScriptWriterAgent:
             print(f"Error writing game script: {e}")
             return None
 
+    def _extract_value(self, obj, attr: str, default: str) -> str:
+        """Safely extract value from object or dict"""
+        if hasattr(obj, attr):
+            return getattr(obj, attr) or default
+        elif isinstance(obj, dict):
+            return obj.get(attr, default)
+        return default
+
+    def _extract_platforms(self, game_info) -> str:
+        """Extract and format platforms"""
+        platforms = self._extract_value(game_info, "platforms", [])
+        if isinstance(platforms, list) and platforms:
+            return ", ".join(platforms)
+        elif platforms:
+            return str(platforms)
+        return "Various platforms"
+
+    def _build_review_summary(self, review_scores: list[ReviewScore]) -> str:
+        """Build a summary of review scores"""
+        if not review_scores:
+            return "Reviews pending"
+
+        summaries = []
+        for score in review_scores[:3]:  # Top 3 reviews
+            outlet = (
+                score.outlet_name
+                if hasattr(score, "outlet_name")
+                else str(score.get("outlet_name", "Review"))
+            )
+            score_val = score.score if hasattr(score, "score") else str(score.get("score", "N/A"))
+            summaries.append(f"{outlet}: {score_val}")
+
+        return ", ".join(summaries)
+
     def _write_event_script(
         self, state: dict[str, Any], language: str, duration: int
     ) -> ScriptOutput | None:
-        """Write script for event content"""
+        """Write script for event content using research data"""
         try:
             event_info = state.get("event_info")
+            game_info_list = state.get("game_info", [])
+            media_assets = state.get("media_assets", [])
+
             if not event_info:
                 return None
 
-            # Simple event script template
+            # Create event script template
             template = self._get_event_template(language, duration)
 
             # Create timestamps for template
             timestamps = self._create_event_timestamps(duration)
             end_highlights = min(duration - 2, int(duration * 0.8))
 
+            # Extract event data
+            event_title = self._extract_value(event_info, "title", "Gaming Event")
+            announced_games = self._extract_value(event_info, "announced_games", [])
+            highlights = self._extract_value(event_info, "highlights", [])
+
+            # Build game details from research
+            game_details = []
+            for game in game_info_list[:3]:  # Top 3 researched games
+                name = self._extract_value(game, "name", "Unknown Game")
+                developer = self._extract_value(game, "developer", "Unknown Developer")
+                game_details.append(f"{name} by {developer}")
+
             context = {
-                "event_title": event_info.title
-                if hasattr(event_info, "title")
-                else event_info.get("title", "Gaming Event"),
-                "game_count": len(
-                    event_info.announced_games
-                    if hasattr(event_info, "announced_games")
-                    else event_info.get("announced_games", [])
-                ),
-                "announced_games": ", ".join(
-                    (
-                        event_info.announced_games
-                        if hasattr(event_info, "announced_games")
-                        else event_info.get("announced_games", [])
-                    )[:5]
-                )
-                or "Various games",
-                "highlights": ". ".join(
-                    (
-                        event_info.highlights
-                        if hasattr(event_info, "highlights")
-                        else event_info.get("highlights", [])
-                    )[:3]
-                )
-                or "Exciting announcements and reveals",
+                "event_title": event_title,
+                "game_count": len(announced_games),
+                "announced_games": ", ".join(announced_games[:5])
+                if announced_games
+                else "Various games",
+                "game_details": ", ".join(game_details) if game_details else "Exciting new titles",
+                "highlights": ". ".join(highlights[:3])
+                if highlights
+                else "Major announcements and reveals",
+                "trailer_count": len(media_assets),
                 "duration": duration,
                 "end_highlights": f"{end_highlights:02d}:00",
             }
 
             script_content = template.format(**context)
 
-            event_title = (
-                event_info.title
-                if hasattr(event_info, "title")
-                else event_info.get("title", "Gaming Event")
-            )
             return ScriptOutput(
                 title=f"{event_title} - Summary",
                 duration_minutes=duration,
@@ -183,46 +212,86 @@ class ScriptWriterAgent:
             if script_format == "review":
                 return """[00:00-00:30] Salut tout le monde ! Aujourd'hui on parle de {game_name}, développé par {developer}. Ce {genre} a fait beaucoup parler de lui récemment.
 
-[00:30-02:00] {game_name} est un jeu développé par {developer} et édité par {publisher}, disponible sur {platforms}. {description}
+[00:30-02:00] {game_name} est développé par {developer} et édité par {publisher}, disponible sur {platforms}. {description}
 
-[02:00-{end_gameplay}] Côté gameplay, {game_name} propose une expérience unique dans le genre {genre}. Le jeu se distingue par ses mécaniques innovantes et son attention aux détails.
+[02:00-{end_gameplay}] Côté gameplay, {game_name} propose une expérience unique dans le genre {genre}. On a {trailer_info} pour vous montrer le jeu en action.
 
-[{end_gameplay}-{end_review}] Les critiques sont {review_scores} et la communauté semble apprécier l'expérience globale.
+[{end_gameplay}-{end_review}] Les critiques donnent {review_scores}. La communauté semble vraiment apprécier l'expérience.
 
-[{end_review}-{duration}:00] En conclusion, {game_name} est un excellent ajout à votre ludothèque. N'hésitez pas à me dire en commentaire ce que vous en pensez !"""
+[{end_review}-{duration}:00] En conclusion, {game_name} mérite définitivement votre attention. Dites-moi en commentaire si vous comptez y jouer !"""
+            elif script_format == "preview":
+                return """[00:00-00:30] Salut ! Aujourd'hui, on découvre {game_name} de {developer} - un {genre} qui s'annonce prometteur !
+
+[00:30-02:00] Développé par {developer} pour {publisher}, {game_name} sortira sur {platforms}. {description}
+
+[02:00-{end_gameplay}] D'après {trailer_info}, le gameplay semble innovant pour un {genre}. Les mécaniques ont l'air vraiment intéressantes.
+
+[{end_gameplay}-{end_review}] Les premières impressions sont {review_scores}. L'attente monte dans la communauté !
+
+[{end_review}-{duration}:00] {game_name} pourrait bien être le {genre} de l'année. Qu'en pensez-vous ?"""
+            elif script_format == "complete_guide":
+                return """[00:00-00:30] Salut ! Guide complet de {game_name} de {developer} - tout ce que vous devez savoir !
+
+[00:30-03:00] {game_name} est développé par {developer}, édité par {publisher}, disponible sur {platforms}. {description}
+
+[03:00-{end_gameplay}] Gameplay détaillé : {game_name} propose une expérience {genre} complète. On a {trailer_info} pour tout vous montrer.
+
+[{end_gameplay}-{end_review}] Critiques et avis : {review_scores}. La réception est globalement positive.
+
+[{end_review}-{duration}:00] Guide d'achat complet : {game_name} vaut-il le coup ? Tout dépend de vos goûts en {genre} !"""
         else:
             if script_format == "review":
-                return """[00:00-00:30] Hey everyone! Today we're diving into {game_name} from {developer}. This {genre} has been making waves lately.
+                return """[00:00-00:30] Hey everyone! Today we're diving deep into {game_name} from {developer}. This {genre} has been making serious waves.
 
 [00:30-02:00] {game_name} is developed by {developer} and published by {publisher}, available on {platforms}. {description}
 
-[02:00-{end_gameplay}] The gameplay in {game_name} offers a unique experience in the {genre} space. What sets it apart are the innovative mechanics and attention to detail.
+[02:00-{end_gameplay}] The gameplay in {game_name} offers a unique experience in the {genre} space. We've got {trailer_info} showcasing what makes this special.
 
-[{end_gameplay}-{end_review}] Critics have rated it {review_scores} and the community response has been overwhelmingly positive.
+[{end_gameplay}-{end_review}] Critics are rating it {review_scores}, and the community response has been fantastic.
 
-[{end_review}-{duration}:00] Overall, {game_name} is a solid addition to your gaming library. Let me know what you think in the comments below!"""
+[{end_review}-{duration}:00] Overall, {game_name} is absolutely worth your time and money. Drop a comment and let me know your thoughts!"""
+            elif script_format == "preview":
+                return """[00:00-00:30] What's up everyone! Today we're previewing {game_name} from {developer} - a {genre} that's generating serious buzz!
+
+[00:30-02:00] Developed by {developer} for {publisher}, {game_name} is coming to {platforms}. {description}
+
+[02:00-{end_gameplay}] From {trailer_info}, the gameplay looks incredibly promising for a {genre}. The mechanics seem really innovative.
+
+[{end_gameplay}-{end_review}] Early impressions show {review_scores}. The hype is building in the community!
+
+[{end_review}-{duration}:00] {game_name} could be the {genre} of the year. What do you think?"""
+            elif script_format == "complete_guide":
+                return """[00:00-00:30] What's up everyone! Complete {game_name} guide from {developer} - everything you need to know!
+
+[00:30-03:00] {game_name} is developed by {developer}, published by {publisher}, available on {platforms}. {description}
+
+[03:00-{end_gameplay}] Complete gameplay breakdown: {game_name} offers a comprehensive {genre} experience. We've got {trailer_info} showing you everything.
+
+[{end_gameplay}-{end_review}] Critical reception: {review_scores}. The overall response has been really positive.
+
+[{end_review}-{duration}:00] Complete buying guide: Is {game_name} worth it? It all depends on your taste for {genre} games!"""
 
         # Default template
         return "Generated script content for {game_name} - {duration} minute {script_format}"
 
     def _get_event_template(self, language: str, duration: int) -> str:
-        """Get event script template"""
+        """Get event script template with research data"""
         if language == "fr":
             return """[00:00-00:30] Salut ! Résumé complet de {event_title} aujourd'hui !
 
 [00:30-02:00] Cet événement nous a apporté {game_count} annonces majeures : {announced_games}.
 
-[02:00-{end_highlights}] Les moments forts : {highlights}
+[02:00-{end_highlights}] Les jeux phares incluent {game_details}. On a trouvé {trailer_count} bandes-annonces officielles ! Moments forts : {highlights}
 
-[{end_highlights}-{duration}:00] C'était un événement riche en surprises ! Dites-moi quel jeu vous attend le plus !"""
+[{end_highlights}-{duration}:00] Un événement exceptionnel ! Quel jeu vous a le plus marqué ? Dites-le moi en commentaire !"""
         else:
-            return """[00:00-00:30] Hey everyone! Complete {event_title} summary coming right up!
+            return """[00:00-00:30] Hey everyone! Complete {event_title} breakdown coming your way!
 
-[00:30-02:00] This showcase brought us {game_count} major announcements including: {announced_games}.
+[00:30-02:00] This showcase delivered {game_count} major announcements including: {announced_games}.
 
-[02:00-{end_highlights}] Key highlights include: {highlights}
+[02:00-{end_highlights}] Featured games include {game_details}. We've got {trailer_count} official trailers to show you! Key highlights: {highlights}
 
-[{end_highlights}-{duration}:00] What an event! Let me know which announcement excited you most in the comments!"""
+[{end_highlights}-{duration}:00] What an incredible event! Which announcement got you most hyped? Drop it in the comments!"""
 
     def _create_timestamps(self, script_format: str, duration: int) -> dict[str, str]:
         """Create section timestamps for game scripts"""

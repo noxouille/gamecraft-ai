@@ -34,8 +34,6 @@ Based on the latest PRD, the system uses 3 core user-facing agents:
 
 **Supporting Infrastructure:**
 - **🤖 Classifier Agent**: Query routing and parameter extraction (internal)
-- **📊 Event Analysis**: Video processing for event content (internal)
-- **🎯 Trailer Finding**: Media discovery for announced games (internal)
 
 **Tech Stack:**
 - **LangGraph**: Multi-agent orchestration
@@ -270,35 +268,28 @@ uv run pytest --cov=src --cov-report=html
 graph TD
     Start([User Query]) --> Classifier{Classifier Agent}
 
-    Classifier -->|GAME Query| GamePath[Game Content Path]
-    Classifier -->|EVENT Query| EventPath[Event Content Path]
+    Classifier --> ResearchAgent[Research Agent<br/>Unified Research Handler]
+    ResearchAgent --> ScriptWriter[Script Writer Agent<br/>Uses Research Data]
+    ScriptWriter --> YouTubeCoach[YouTube Coach Agent<br/>Uses Script + Research]
 
-    %% Game Content Path (Parallel Processing)
-    GamePath --> ScriptWriter1[Script Writer Agent<br/>Game Templates]
-    GamePath --> ResearchAgent[Research Agent<br/>Game Info + Media]
-    GamePath --> YouTubeCoach1[YouTube Coach Agent<br/>Thumbnail Ideas]
+    YouTubeCoach --> FinalOutput[4-Tab Output<br/>• Script Tab<br/>• Research Data Tab<br/>• YouTube Links Tab<br/>• Thumbnail Ideas Tab]
 
-    ScriptWriter1 --> GameOutput[4-Tab Output]
-    ResearchAgent --> GameOutput
-    YouTubeCoach1 --> GameOutput
+    %% Research Agent handles both content types internally
+    ResearchAgent -.->|Game Query| GameFlow[Direct Game Research<br/>• Game Info APIs<br/>• Trailer Discovery<br/>• Review Scores]
+    ResearchAgent -.->|Event Query| EventFlow[Video Analysis + Game Research<br/>• Extract announced games<br/>• Research each game<br/>• Find trailers]
 
-    %% Event Content Path (Sequential + Final Parallel)
-    EventPath --> EventAnalyzer[Event Analyzer<br/>Video Analysis]
-    EventAnalyzer --> ScriptWriter2[Script Writer Agent<br/>Event Templates]
-    EventAnalyzer --> TrailerFinder[Trailer Finder<br/>Find Game Trailers]
-
-    ScriptWriter2 --> EventOutput[Event Content]
-    TrailerFinder --> EventOutput
-    EventOutput --> YouTubeCoach2[YouTube Coach Agent<br/>Event Thumbnails]
-    YouTubeCoach2 --> EventFinalOutput[4-Tab Output]
+    %% Data flow annotations
+    ResearchAgent -->|Research Data| ScriptWriter
+    ScriptWriter -->|Script + Research| YouTubeCoach
 ```
 
 **Key Features:**
-- **Conditional Routing**: Game vs Event content paths
-- **Parallel Processing**: Game path agents run simultaneously for speed
-- **Sequential + Parallel**: Event path optimizes for accuracy then speed
-- **Unified Output**: Both paths produce the same 4-tab structure
-- **Error Handling**: Graceful fallbacks at each node
+- **Unified Linear Flow**: Same 3-agent pipeline for all content types
+- **Smart Research Agent**: Handles both game queries and event video analysis
+- **Template-Based Scripts**: Script Writer adapts to query type automatically
+- **Consistent 4-Tab Output**: Same structure regardless of input type
+- **Sequential Processing**: Optimized for accuracy and simplicity
+- **Error Handling**: Graceful fallbacks at each agent
 - **Caching**: Redis/memory caching for performance
 
 ## 🚨 Troubleshooting
