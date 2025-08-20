@@ -32,21 +32,28 @@ def test_igdb_service():
     igdb = IGDBService()
 
     # Test game search
-    print("\n🔍 Searching for 'Zelda Breath of the Wild'...")
+    print("\n🔍 Searching for 'Clair Obscur Expedition 33'...")
     try:
-        result = igdb.search_game("Zelda Breath of the Wild")
+        result = igdb.search_game("Clair Obscur Expedition 33")
         if result:
-            print(f"✅ Found game: {result['name']}")
-            print(f"   Developer: {result['developer']}")
-            print(f"   Release Date: {result['release_date']}")
-            print(f"   Platforms: {result['platforms']}")
-            print(f"   Rating: {result['rating']}")
-            return True
+            # Check if result contains real data (not fallback)
+            if result.get("name") and not str(result.get("name")).startswith("Game"):
+                print(f"✅ Found game: {result['name']}")
+                print(f"   Developer: {result['developer']}")
+                print(f"   Release Date: {result['release_date']}")
+                print(f"   Platforms: {result['platforms']}")
+                print(f"   Rating: {result['rating']}")
+                return True
+            else:
+                print("❌ IGDB API returned fallback data - authentication failed")
+                return False
         else:
             print("❌ No game data returned")
             return False
     except Exception as e:
         print(f"❌ IGDB Error: {e}")
+        if "401" in str(e) or "403" in str(e):
+            print("❌ IGDB authentication failed - invalid token")
         return False
 
 
@@ -68,29 +75,40 @@ def test_youtube_service():
     try:
         results = youtube.search_videos("Zelda Breath of the Wild trailer", max_results=3)
         if results:
-            print(f"✅ Found {len(results)} videos:")
-            for i, video in enumerate(results, 1):
-                print(f"   {i}. {video['title'][:50]}...")
-                print(f"      Channel: {video['channel_name']}")
-                print(f"      Video ID: {video['id']}")
-
-            # Test video details
-            video_id = results[0]["id"]
-            print(f"\n🔍 Getting details for video: {video_id}")
-            details = youtube.get_video_details(video_id)
-            if details:
-                print("✅ Video details retrieved:")
-                print(f"   Duration: {details['duration']} seconds")
-                print(f"   Views: {details.get('view_count', 'N/A')}")
-                return True
-            else:
-                print("❌ Failed to get video details")
+            # Check if results contain real data (not fallback)
+            if results[0]["id"].startswith("fallback"):
+                print("❌ YouTube API returned fallback data - authentication failed")
+                for i, video in enumerate(results, 1):
+                    print(f"   {i}. {video['title'][:50]}... (FALLBACK)")
+                    print(f"      Channel: {video['channel_name']}")
+                    print(f"      Video ID: {video['id']}")
                 return False
+            else:
+                print(f"✅ Found {len(results)} videos:")
+                for i, video in enumerate(results, 1):
+                    print(f"   {i}. {video['title'][:50]}...")
+                    print(f"      Channel: {video['channel_name']}")
+                    print(f"      Video ID: {video['id']}")
+
+                # Test video details
+                video_id = results[0]["id"]
+                print(f"\n🔍 Getting details for video: {video_id}")
+                details = youtube.get_video_details(video_id)
+                if details:
+                    print("✅ Video details retrieved:")
+                    print(f"   Duration: {details['duration']} seconds")
+                    print(f"   Views: {details.get('view_count', 'N/A')}")
+                    return True
+                else:
+                    print("❌ Failed to get video details")
+                    return False
         else:
             print("❌ No videos found")
             return False
     except Exception as e:
         print(f"❌ YouTube Error: {e}")
+        if "403" in str(e) or "400" in str(e):
+            print("❌ YouTube authentication failed - check API key and quota")
         return False
 
 
