@@ -3,15 +3,16 @@
 
 **Last Updated:** 2025-08-20
 **Updated By:** Lead Product Manager
-**Version:** 1.0
+**Version:** 2.0
 
 ---
 
 ## Current Project Phase/Milestone
 
-**Phase:** Project Initialization and Foundation Setup
+**Phase:** Sprint 1 - Foundation & Query Classification
 **Milestone:** MVP Development (Week 1-2 of 8-week timeline)
 **Current Focus:** Query classification and routing system foundation
+**Sprint Plan:** Complete detailed sprint plan available at `/docs/sprints/mvp_sprint_plan.md`
 
 ### Project Overview
 GameCraft AI is an AI-powered web application that helps YouTube gaming content creators by providing two core functionalities:
@@ -30,58 +31,78 @@ The platform supports both English and French languages with automatic language 
 - Basic configuration files in place (pyproject.toml, Makefile, etc.)
 - Comprehensive PRD documented with detailed requirements
 - Project repository initialized with proper structure
+- **NEW: Complete MVP Sprint Plan created**
 
 ### 📄 Key Deliverables Completed
 - `/docs/PRD.md` - Complete Product Requirements Document
 - `/src/gamecraft_ai/main.py` - Basic FastAPI app structure
+- `/docs/sprints/mvp_sprint_plan.md` - Comprehensive 4-sprint MVP plan
 - Project scaffolding and development environment setup
 
 ---
 
 ## Current Task Assignment
 
-**Agent Type Required:** Backend Architecture Specialist
-**Primary Responsibility:** Design and implement the foundational architecture for dual-mode AI agent system
+**Agent Type Required:** Backend Architecture Specialist (Primary) + ML/NLP Specialist (Supporting)
+**Primary Responsibility:** Execute Sprint 1 deliverables for foundation and query classification
+**Sprint Reference:** See detailed Sprint 1 plan in `/docs/sprints/mvp_sprint_plan.md`
 
-### Immediate Tasks (Priority Order)
-1. **Query Type Classification System**
-   - Implement language detection (English/French)
-   - Build query classifier to distinguish between event and game queries
-   - Create routing logic for dual-mode processing
+### Sprint 1 Immediate Tasks (Priority Order)
+1. **Query Intelligence System** (Days 1-7)
+   - Implement language detection service (>99% accuracy target)
+   - Build query type classification (>98% accuracy target)
+   - Create intent extraction for parameters (duration, game names, URLs)
+   - Implement routing logic for dual-mode processing
 
-2. **Core Architecture Setup**
-   - Design modular agent system architecture
-   - Implement base classes for different agent types
-   - Set up configuration management for LLM models
-   - Create database schema and connection layer
+2. **Core Infrastructure** (Days 8-12)
+   - Complete database schema implementation (all PRD tables)
+   - Build API client framework with error handling
+   - Set up Redis caching layer with TTL strategies
+   - Create base agent architecture classes
 
-3. **External API Integration Foundation**
-   - Research and document API requirements (YouTube, Steam, IGDB, etc.)
-   - Implement API client base classes
-   - Set up authentication and rate limiting frameworks
+3. **Integration & Testing** (Days 13-14)
+   - Implement FastAPI endpoints (/classify, /analyze, /health)
+   - Create comprehensive unit and integration tests
+   - Performance benchmarking for <500ms classification
+   - Documentation for all public APIs
 
 ---
 
-## Required Deliverables
+## Sprint 1 Required Deliverables
 
-### Technical Deliverables
-- [ ] Query classification service (`src/gamecraft_ai/services/query_classifier.py`)
-- [ ] Base agent architecture (`src/gamecraft_ai/agents/base_agent.py`)
-- [ ] Database models and schema (`src/gamecraft_ai/models/`)
-- [ ] API client framework (`src/gamecraft_ai/clients/`)
-- [ ] Configuration management system (`src/gamecraft_ai/config.py` enhancement)
-- [ ] FastAPI endpoints for query processing (`/classify`, `/process`)
+### Core Services (Priority 1)
+- [ ] `src/gamecraft_ai/services/query_classifier.py` - Main classification service
+- [ ] `src/gamecraft_ai/services/language_detector.py` - Language detection (>99% accuracy)
+- [ ] `src/gamecraft_ai/services/intent_extractor.py` - Parameter extraction
+- [ ] `src/gamecraft_ai/database.py` - Database connection and session management
 
-### Documentation Deliverables
-- [ ] Architecture decision records (ADRs)
-- [ ] API integration research document
-- [ ] Database schema documentation
-- [ ] Agent system design document
+### Database & Models (Priority 1)
+- [ ] Complete database models in `src/gamecraft_ai/models/`
+- [ ] Migration scripts for all PRD schema tables
+- [ ] Database connection pooling configuration
 
-### Testing Deliverables
-- [ ] Unit tests for query classification
-- [ ] Integration tests for API clients
-- [ ] Performance benchmarks for classification speed (<500ms requirement)
+### API Framework (Priority 2)
+- [ ] `src/gamecraft_ai/clients/base_client.py` - Base API client with retry logic
+- [ ] `src/gamecraft_ai/clients/youtube_client.py` - YouTube API integration
+- [ ] `src/gamecraft_ai/clients/steam_client.py` - Steam API integration
+- [ ] `src/gamecraft_ai/clients/igdb_client.py` - IGDB API integration
+
+### FastAPI Endpoints (Priority 2)
+- [ ] `GET /health` - System health check
+- [ ] `POST /classify` - Query classification endpoint
+- [ ] `POST /analyze` - Main analysis routing endpoint
+
+### Infrastructure (Priority 3)
+- [ ] Redis caching integration with intelligent TTL
+- [ ] Configuration management enhancement
+- [ ] Logging and monitoring setup
+- [ ] Error handling and circuit breaker patterns
+
+### Testing & Documentation (Continuous)
+- [ ] Unit tests with >85% coverage
+- [ ] Integration tests for all external APIs
+- [ ] Performance benchmarks (<500ms classification)
+- [ ] API documentation with examples
 
 ---
 
@@ -115,48 +136,81 @@ The platform supports both English and French languages with automatic language 
 
 ---
 
-## Open Questions/Blockers
+## Sprint 1 Critical Questions & Decisions
 
-### API Access Questions
-1. **API Rate Limits:** What are the specific rate limits for each external API?
-2. **API Costs:** Need cost analysis for expected usage volumes
-3. **API Authentication:** How to securely manage multiple API keys?
+### API Integration Priorities (Resolve Days 1-3)
+1. **Immediate API Access Required:**
+   - YouTube Data API v3 (for video metadata and search)
+   - OpenAI API (for language detection and classification)
+   - Steam Web API (basic game information)
+   - IGDB API (comprehensive game database)
 
-### Architecture Decisions Needed
-1. **Agent Communication:** How should agents pass data between each other?
-2. **Caching Strategy:** What data should be cached and for how long?
-3. **Error Handling:** How to handle external API failures gracefully?
-4. **Scaling:** Database design for future horizontal scaling?
+2. **API Rate Limit Research:** Document limits for each service to inform caching strategy
+3. **Authentication Strategy:** Secure API key management with rotation capability
 
-### Technical Clarifications
-1. **LLM Model Selection:** Confirm specific models for each agent type
-2. **Language Detection:** Should we use external service or build in-house?
-3. **Video Processing:** How to handle large video files efficiently?
+### Architecture Decisions (Resolve Days 4-5)
+1. **Language Detection:** Use OpenAI/Anthropic for high accuracy vs. lightweight local model
+2. **Caching Strategy:** Redis with 24h TTL for game info, 1h for dynamic data
+3. **Database:** PostgreSQL with proper indexing for query performance
+4. **Error Handling:** Circuit breaker pattern with fallback to cached data
+
+### Implementation Priorities (Sprint 1 Scope)
+1. **Focus on Core Path:** Query classification → Routing → Basic response
+2. **Defer Complex Features:** Advanced AI agents, complex script generation
+3. **Establish Patterns:** Create reusable patterns for subsequent sprints
 
 ---
 
-## Next Steps Recommendations
+## Sprint 1 Execution Plan (14 Days)
 
-### Immediate Next Steps (This Sprint)
-1. **Research Phase (Days 1-2):**
-   - Document all external API capabilities and limitations
-   - Create API access accounts and test basic connectivity
-   - Finalize database schema based on API response structures
+### Week 1: Core Foundation (Days 1-7)
+1. **Days 1-2: Research & Setup**
+   - Obtain API access for YouTube, Steam, IGDB, OpenAI
+   - Test basic connectivity and document rate limits
+   - Finalize database schema based on API response analysis
 
-2. **Foundation Development (Days 3-5):**
-   - Implement query classification with basic language detection
-   - Set up database models and migrations
-   - Create base agent architecture with proper interfaces
+2. **Days 3-5: Core Services Development**
+   - Implement language detection service with >99% accuracy target
+   - Build query type classification with ML approach
+   - Create intent extraction for parameters (duration, game names)
+   - Set up database models and connection management
 
-3. **Integration Setup (Days 6-7):**
-   - Build API client framework with error handling
-   - Implement caching layer with Redis
-   - Create basic FastAPI endpoints for query processing
+3. **Days 6-7: API Framework & Integration**
+   - Build base API client with retry logic and rate limiting
+   - Implement specific clients for each external service
+   - Set up Redis caching with intelligent TTL strategies
 
-### Subsequent Sprint Recommendations
-1. **Sprint 2:** Game Information Aggregation APIs (Weeks 3-4)
-2. **Sprint 3:** Media Discovery and Review Aggregation (Week 5)
-3. **Sprint 4:** Script Template System (Week 6)
+### Week 2: Integration & Testing (Days 8-14)
+1. **Days 8-10: FastAPI Endpoints**
+   - Implement /classify endpoint with comprehensive validation
+   - Create /analyze endpoint with routing logic
+   - Add /health endpoint with dependency checks
+
+2. **Days 11-12: Testing & Optimization**
+   - Unit tests for all services with >85% coverage
+   - Integration tests for external API interactions
+   - Performance testing to meet <500ms classification target
+
+3. **Days 13-14: Documentation & Handoff**
+   - Complete API documentation with examples
+   - Performance benchmarking and optimization
+   - Prepare handoff documentation for Sprint 2 agents
+
+### Subsequent Sprint Plan (See detailed plan for full specifications)
+1. **Sprint 2 (Weeks 3-4):** Game Information & Media Discovery
+   - Complete game research pipeline with IGDB, Steam, YouTube APIs
+   - Media asset discovery and quality assessment
+   - Review aggregation from Metacritic, OpenCritic, and major outlets
+
+2. **Sprint 3 (Weeks 5-6):** Event Processing & Script Generation
+   - Video transcription and event analysis
+   - Multi-format script generation (review, preview, summary templates)
+   - Bilingual content generation with cultural adaptation
+
+3. **Sprint 4 (Weeks 7-8):** Integration, Testing & Optimization
+   - End-to-end system integration and performance optimization
+   - Comprehensive testing and quality assurance
+   - Production deployment preparation
 
 ---
 
@@ -185,25 +239,59 @@ When completing work, the next agent should:
 
 ---
 
-## Success Criteria for Current Phase
+## Sprint 1 Success Criteria & Exit Conditions
 
-### Technical Success Metrics
-- Query classification accuracy: >98%
-- Response time for classification: <500ms
-- All external APIs successfully connected and tested
-- Database schema supports all PRD requirements
-- Clean, documented, and testable code architecture
+### Technical Success Metrics (Must Achieve)
+- [ ] Query classification accuracy: >98% on test dataset
+- [ ] Language detection accuracy: >99% for English/French
+- [ ] Response time for classification: <200ms (target) / <500ms (requirement)
+- [ ] All external APIs connected with proper error handling
+- [ ] Database schema complete and tested for all PRD requirements
+- [ ] Code coverage >85% with all tests passing
 
-### Business Success Metrics
-- Foundation supports both event and game query modes
-- Architecture scalable for 10 concurrent users
-- All PRD technical requirements addressed in design
-- Clear path to MVP completion within 8-week timeline
+### Functional Success Metrics (Must Demonstrate)
+- [ ] System correctly routes event vs. game queries
+- [ ] Extracts parameters (duration, game names, URLs) accurately
+- [ ] Handles both English and French queries naturally
+- [ ] Gracefully handles API failures with appropriate fallbacks
+- [ ] Can process 10 concurrent classification requests
+
+### Quality Success Metrics (Must Validate)
+- [ ] Zero critical security vulnerabilities in code scan
+- [ ] API documentation complete with working examples
+- [ ] Performance benchmarks meet all targets
+- [ ] Error messages provide clear, actionable guidance
+- [ ] Monitoring and logging operational for production readiness
+
+### Sprint 1 Exit Conditions
+✅ **Ready for Sprint 2:** All success metrics achieved, Sprint 2 agents can begin game information aggregation
+⚠️ **Needs Extension:** Critical functionality missing, require additional time before proceeding
+🚫 **Blocked:** External dependencies or technical issues preventing progress
 
 ---
 
-**Agent Assignment:** Backend Architecture Specialist needed for foundational system design and implementation.
+## Sprint 1 Agent Assignment
 
-**Estimated Effort:** 5-7 days for complete foundation setup
+**Primary Agent:** Backend Architecture Specialist
+**Supporting Agent:** ML/NLP Specialist (for classification algorithms)
+**Sprint Duration:** 14 days (2 weeks)
+**Sprint Reference:** `/docs/sprints/mvp_sprint_plan.md` - Sprint 1 section
 
-**Next Agent Recommendation:** After foundation completion, recommend Frontend/UI Specialist for user interface development or ML/AI Specialist for advanced agent implementation depending on foundation completion status.
+### Agent Coordination Strategy
+- **Days 1-7:** Backend Architecture Specialist leads infrastructure setup
+- **Days 3-10:** ML/NLP Specialist focuses on classification accuracy
+- **Days 8-14:** Joint integration and testing effort
+- **Daily standups** to coordinate parallel workstreams
+
+**Next Agent Handoff:** Upon Sprint 1 completion, hand off to:
+- **Game Information Specialist Agent** (for Sprint 2 game research pipeline)
+- **Media Discovery Specialist Agent** (for Sprint 2 media asset discovery)
+- **Review Aggregation Specialist Agent** (for Sprint 2 review collection)
+
+### Sprint 1 Completion Criteria
+Before handoff to Sprint 2 agents, must achieve:
+✅ All Sprint 1 success metrics met
+✅ Performance benchmarks validated
+✅ Integration tests passing
+✅ Documentation complete
+✅ Production readiness checklist completed for foundation components

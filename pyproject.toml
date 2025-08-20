@@ -1,6 +1,103 @@
 [project]
 name = "gamecraft-ai"
 version = "0.1.0"
-description = "Add your description here"
+description = "AI-powered YouTube video summary and script generator for gaming content creators"
+readme = "README.md"
 requires-python = ">=3.12"
-dependencies = []
+authors = [
+    {name = "GameCraft AI Team"}
+]
+keywords = ["ai", "youtube", "gaming", "content", "script", "generator"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: End Users/Desktop",
+    "Topic :: Multimedia :: Video",
+    "Topic :: Internet :: WWW/HTTP :: Dynamic Content",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3 :: Only",
+]
+
+dependencies = [
+    # Core data validation
+    "pydantic>=2.0.0",
+    "pydantic-settings>=2.0.0",
+    # LangGraph and AI
+    "langgraph>=0.0.40",
+    "langchain>=0.1.0",
+    "langchain-core>=0.1.0",
+    # HTTP client for APIs
+    "httpx>=0.24.0",
+    # Web UI
+    "gradio>=4.0.0",
+    # Utilities
+    "typing-extensions>=4.5.0",
+    "pytest>=8.4.1",
+    "pytest-cov>=6.2.1",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.0.0",
+    "pytest-asyncio>=0.21.0",
+    "pytest-cov>=4.0.0",
+    "ruff>=0.1.0",
+    "mypy>=1.0.0",
+    "pre-commit>=3.0.0",
+]
+
+redis = [
+    "redis>=4.5.0",
+]
+
+[project.scripts]
+gamecraft-ai = "src.gamecraft_ai.main:main"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+select = ["E", "F", "I", "N", "W", "B", "UP"]
+ignore = ["E501"]
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
+
+[tool.mypy]
+python_version = "3.12"
+warn_return_any = true
+warn_unused_configs = true
+disallow_untyped_defs = false
+disallow_any_unimported = false
+no_implicit_optional = true
+warn_redundant_casts = true
+warn_unused_ignores = true
+show_error_codes = true
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py", "*_test.py"]
+addopts = "-v --cov=src --cov-report=html --cov-report=term"
+
+[tool.coverage.run]
+source = ["src"]
+omit = ["tests/*", "*/test_*.py"]
+
+[tool.coverage.report]
+exclude_lines = [
+    "pragma: no cover",
+    "def __repr__",
+    "if __name__ == .__main__.:",
+    "raise AssertionError",
+    "raise NotImplementedError",
+]
+
+[dependency-groups]
+dev = [
+    "pre-commit>=4.3.0",
+    "types-redis>=4.6.0.20241004",
+]

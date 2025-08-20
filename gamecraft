@@ -1,0 +1,8 @@
+#!/usr/bin/env bash
+# GameCraft AI - Convenient launcher script
+
+# Change to the project directory
+cd "$(dirname "$0")"
+
+# Run the application using uv
+exec uv run python -m src.gamecraft_ai.main "$@"

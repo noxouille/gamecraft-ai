@@ -12,10 +12,10 @@ help:
 	@echo "  make clean      - Clean up generated files"
 
 install:
-	uv pip install -e .
+	uv sync --no-dev
 
 dev:
-	uv pip install -e ".[dev]"
+	uv sync
 
 test:
 	uv run pytest

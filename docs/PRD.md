@@ -9,11 +9,21 @@
 
 ## Executive Summary
 
-A web application that helps YouTube gaming content creators by providing two core functionalities:
-1. **Event Coverage**: Transform long-form gaming events (showcases, conferences) into structured summaries and production-ready scripts
-2. **Game Reviews/Videos**: Generate comprehensive video scripts about individual games with trailer compilation and key information gathering
+A web application that helps YouTube gaming content creators through a streamlined 3-agent AI system:
 
-The platform supports both English and French languages, with output automatically matching the query language. Users provide either an event video URL or a game name with desired output length, and receive summaries, trailer links, and production-ready scripts through AI-powered analysis.
+**Core Agents:**
+1. **Script Writer Agent**: Creates production-ready video scripts with timestamps for games/events
+2. **Research Agent**: Finds official YouTube trailer links and gathers comprehensive game/event data
+3. **YouTube Coach Agent**: Generates 3 viral thumbnail prompts for image generation services
+
+**Key Features:**
+- Supports both game reviews and event coverage
+- Bilingual support (English/French) with automatic language detection
+- User-selectable AI models (6 options including GPT-4o, Claude, etc.)
+- 4-tab output: Script, Research Data, YouTube Links, Thumbnail Ideas
+- Target duration: 5-20 minutes with proper script structuring
+
+Users input natural language queries and receive everything needed for video production: professional scripts, research data, video footage links, and viral thumbnail strategies.
 
 ## Problem Statement
 
@@ -89,49 +99,37 @@ Game Content:
 - FR: "Fais une critique de 10 minutes de Spider-Man 2"
 ```
 
-#### 2. Dual-Mode AI Agent System
+#### 2. AI Agent System (Simplified)
 
-##### Mode A: Event Analysis (Existing)
-- **Video Analyzer Agent**: Extracts announcements from event video
-- **Trailer Finder Agent**: Finds trailers for announced games
-- **Script Writer Agent**: Creates event summary script
+**Script Writer Agent**
+- Generates production-ready video scripts based on query type and requirements
+- Adapts content structure to target duration (5-20 minutes)
+- Supports multiple formats:
+  - Game review scripts
+  - Game preview/first impressions scripts
+  - Event summary scripts
+  - "Everything you need to know" comprehensive guides
+- Automatically matches query language (English/French)
+- Creates timestamped script sections for easy video editing
 
-##### Mode B: Game Research (New)
-**Game Information Agent**
-- Searches for comprehensive game information:
-  - Release date, platforms, developer, publisher
-  - Genre, gameplay mechanics, key features
-  - Story synopsis (spoiler-free option)
-  - Technical specifications
+**Research Agent**
+- Retrieves official YouTube trailer links for games mentioned in queries
+- For events/conferences: Finds all announced game trailers from that event
+- Gathers comprehensive research data about games/events:
+  - Game information (developer, publisher, release date, platforms)
+  - Review scores and critical reception
+  - Key features and gameplay mechanics
+  - Technical specifications and performance data
   - DLC and update information
-  - Price information
+- Provides structured research output for script enhancement
 
-**Media Collector Agent**
-- Finds all related media:
-  - Announcement trailer
-  - Gameplay trailers
-  - Launch trailer
-  - Developer interviews
-  - Behind-the-scenes content
-  - Review/preview videos from major outlets
-
-**Review Aggregator Agent**
-- Collects critical reception:
-  - Metacritic scores
-  - OpenCritic scores
-  - Major outlet review scores
-  - User ratings
-  - Common praise points
-  - Common criticisms
-  - Technical performance reports
-
-**Script Writer Agent (Enhanced)**
-- Generates scripts based on content type:
-  - Review format
-  - Preview/first impressions format
-  - Retrospective format
-  - News/announcement format
-  - "Everything you need to know" format
+**YouTube Coach Agent**
+- Analyzes query content and generated script
+- Suggests 3 specific thumbnail generation prompts for image AI services
+- Focuses on viral video strategies and high click-through rates
+- Considers current YouTube trends and gaming content best practices
+- Adapts suggestions based on content type (review, preview, event coverage)
+- Includes design elements for maximum engagement (emotions, text, colors)
 
 #### 3. Content Type Templates
 
@@ -189,35 +187,37 @@ Game Content:
 ```markdown
 ## [Game Name] Video Resources
 
-### Game Information
+### 📜 Generated Script
+[Production-ready timestamped script based on query]
+
+### 🔍 Research Data
 - Developer: [Name]
 - Publisher: [Name]
 - Release Date: [Date]
 - Platforms: [List]
 - Genre: [Type]
-- Price: [Amount]
+- Critical Reception Summary
+- Key Features & Talking Points
 
-### Media Assets
-1. Announcement Trailer: [URL] (Length: X:XX)
-2. Gameplay Trailer: [URL] (Length: X:XX)
-3. Launch Trailer: [URL] (Length: X:XX)
-4. Developer Interview: [URL] (Length: X:XX)
+### 🎥 YouTube Links
+#### Official Trailers
+- Announcement Trailer: [URL]
+- Gameplay Trailer: [URL]
+- Launch Trailer: [URL]
 
-### Critical Reception
-- Metacritic: XX/100 (PC), XX/100 (PS5), XX/100 (Xbox)
-- OpenCritic: XX/100 - "Mighty"
-- IGN: X/10 - "Amazing"
-- GameSpot: X/10
-- User Score: X.X/10
+#### Review Videos
+- Major outlet reviews and gameplay videos
 
-### Key Talking Points
-- Strengths: [List]
-- Weaknesses: [List]
-- Unique Features: [List]
-- Technical Performance: [Summary]
+### 🖼️ Thumbnail Suggestions
+#### Viral Thumbnail Concepts (3 AI-Ready Prompts)
+1. [Specific prompt for image generation service]
+2. [Specific prompt for image generation service]
+3. [Specific prompt for image generation service]
 
-### Generated Script
-[Full script based on selected template]
+#### Design Tips
+- High-CTR strategies
+- Color schemes and text guidelines
+- Mobile optimization tips
 ```
 
 #### 5. Language Support (Enhanced)
@@ -236,22 +236,27 @@ Same automatic language detection, with terminology adapted for both content typ
 
 #### 6. LLM Configuration
 
-**Model Selection by Task**
+**Model Selection by Agent**
 ```javascript
 const modelConfig = {
-  // Event Coverage
-  eventAnalyzer: "gpt-4",
+  // Script Writing
+  scriptWriter: "gpt-4o-mini", // Default, user-selectable
 
-  // Game Research
-  infoGatherer: "gpt-4",
-  mediaCollector: "gpt-3.5-turbo",
-  reviewAggregator: "claude-3",
+  // Research & Data Gathering
+  researchAgent: "gpt-4o-mini", // Default, user-selectable
 
-  // Script Writing (both modes)
-  scriptWriter: "claude-3",
+  // YouTube Coaching
+  youtubeCoach: "gpt-4o-mini", // Default, user-selectable
 
-  // Language-specific
-  frenchOptimizer: "gpt-4"
+  // Available Models
+  availableModels: [
+    "gpt-4o-mini",     // Fast, cost-effective (default)
+    "gpt-4o",          // Most capable OpenAI
+    "gpt-4-turbo",     // Advanced reasoning
+    "gpt-3.5-turbo",   // Legacy fast model
+    "claude-3-5-sonnet-20241022", // Anthropic's best
+    "claude-3-haiku-20240307"     // Fast Anthropic
+  ]
 };
 ```
 
@@ -263,40 +268,35 @@ const modelConfig = {
 
 ## Technical Requirements
 
-### Enhanced Architecture
+### Simplified Architecture
 
 ```
 Input Layer:
 ├── Query Type Classifier
 ├── Language Detector
-├── Event URL Parser (Mode A)
-└── Game Name Extractor (Mode B)
+└── Parameter Extractor (game names, URLs, duration)
 
-Mode A: Event Processing
-├── Video Transcript Extractor
-├── Event Analyzer
-├── Announcement Detector
-└── Trailer Finder
-
-Mode B: Game Research
-├── Game Information API
-├── Media Search Engine
-├── Review Aggregator API
-├── YouTube Search API
-├── Steam API Integration
-├── Metacritic Scraper
-└── Gaming News RSS Feeds
-
-Script Generation Layer:
-├── Template Selector
-├── Content Structuring
-├── Language Optimizer
-└── Script Formatter
+Agent Processing Layer:
+├── Script Writer Agent
+│   ├── Template Selector
+│   ├── Content Structuring
+│   ├── Language Optimizer
+│   └── Script Formatter
+├── Research Agent
+│   ├── YouTube Search API
+│   ├── Game Information API (IGDB, Steam)
+│   ├── Review Aggregator
+│   └── Event Analysis (for conferences)
+└── YouTube Coach Agent
+    ├── Thumbnail Strategy Analyzer
+    ├── Trend Analysis
+    └── Prompt Generator
 
 Output Layer:
-├── Summary Generator
-├── Asset Compiler
-└── Export Formatter
+├── Script Generator
+├── Research Data Formatter
+├── YouTube Links Compiler
+└── Thumbnail Suggestions Formatter
 ```
 
 ### External Dependencies
@@ -311,11 +311,10 @@ Output Layer:
 
 ### Performance Requirements
 - Query classification: <500ms
-- Game information gathering: <10 seconds
-- Media discovery: <15 seconds
-- Review aggregation: <10 seconds
-- Script generation: <30 seconds
-- Total processing: <60 seconds for game content
+- Script Writer Agent: <30 seconds
+- Research Agent: <20 seconds (info gathering + YouTube search)
+- YouTube Coach Agent: <10 seconds (thumbnail suggestions)
+- Total processing: <60 seconds for all agents
 - Concurrent requests: 10
 
 ## User Flow
@@ -332,17 +331,16 @@ Output Layer:
 ### Flow B: Game Content (New)
 ```
 1. User: "Make a 10-minute review video about Baldur's Gate 3"
-2. System identifies query type (game review)
-3. System gathers game information from multiple sources
-4. System finds all relevant media (trailers, gameplay)
-5. System aggregates review scores and opinions
-6. System generates review script with selected template
-7. User receives:
-   - Complete game information
-   - All media links with timestamps
-   - Review scores summary
-   - Production-ready script
-   - B-roll suggestions
+2. System classifies query and extracts parameters
+3. Script Writer Agent: Generates timestamped video script
+4. Research Agent: Gathers game info + finds YouTube trailer links
+5. YouTube Coach Agent: Creates 3 viral thumbnail prompts
+6. User receives:
+   - Production-ready script with timestamps
+   - Comprehensive research data
+   - Official trailer and gameplay video links
+   - 3 AI-ready thumbnail generation prompts
+   - Design tips for viral success
 ```
 
 ## Data Schema
@@ -408,14 +406,15 @@ CREATE TABLE review_scores (
 ## MVP Scope
 
 ### In Scope
+- **Script Writer Agent**: Production-ready video scripts for games/events
+- **Research Agent**: Game information + official YouTube trailer links
+- **YouTube Coach Agent**: 3 AI-ready thumbnail generation prompts per query
 - Event summary from video URLs
 - Individual game video script generation
-- Game information aggregation
-- Media asset discovery
-- Review score compilation
 - English and French support
 - 5, 10, 15, 20-minute script options
 - Multiple script templates (review, preview, summary)
+- Model selection (6 available AI models)
 - Simple authentication
 
 ### Out of Scope (MVP)
@@ -451,12 +450,12 @@ CREATE TABLE review_scores (
 ## Timeline
 
 **MVP Development (8 weeks)**
-- Week 1-2: Query classification & routing system
-- Week 3-4: Game information aggregation APIs
-- Week 5: Media discovery and review aggregation
-- Week 6: Script template system
-- Week 7: Integration and language support
-- Week 8: Testing and optimization
+- Week 1-2: Query classification & routing system + UI foundation
+- Week 3-4: Script Writer Agent implementation
+- Week 5: Research Agent (game info + YouTube trailer search)
+- Week 6: YouTube Coach Agent (viral thumbnail prompts)
+- Week 7: Agent integration and model selection
+- Week 8: Testing, optimization, and language support
 
 ## Appendix
 
@@ -494,8 +493,9 @@ FR: "Fais un aperçu de Dragon Age Dreadwolf"
 ---
 
 **Next Steps:**
-1. Implement query type classification
-2. Integrate game information APIs (IGDB, Steam)
-3. Build review aggregation system
-4. Create script template library
-5. Test with various game titles and events
+1. ✅ Implement query type classification (COMPLETED)
+2. ✅ UI with model selection (COMPLETED)
+3. Implement Script Writer Agent with multiple templates
+4. Implement Research Agent with YouTube API integration
+5. Implement YouTube Coach Agent for thumbnail suggestions
+6. Test complete 3-agent workflow with various queries
