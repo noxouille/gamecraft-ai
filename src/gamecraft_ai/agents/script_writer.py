@@ -121,9 +121,19 @@ class ScriptWriterAgent:
 
     def _extract_platforms(self, game_info) -> str:
         """Extract and format platforms"""
-        platforms = game_info.get("platforms", []) if game_info else []
+        if not game_info:
+            return "Various platforms"
+
+        # Handle both dict and Pydantic model formats
+        if hasattr(game_info, "platforms"):
+            platforms = game_info.platforms
+        elif isinstance(game_info, dict):
+            platforms = game_info.get("platforms", [])
+        else:
+            return "Various platforms"
+
         if isinstance(platforms, list) and platforms:
-            return ", ".join(platforms)
+            return ", ".join(str(p) for p in platforms)
         elif platforms:
             return str(platforms)
         return "Various platforms"
@@ -135,12 +145,17 @@ class ScriptWriterAgent:
 
         summaries = []
         for score in review_scores[:3]:  # Top 3 reviews
-            outlet = (
-                score.outlet_name
-                if hasattr(score, "outlet_name")
-                else str(score.get("outlet_name", "Review"))
-            )
-            score_val = score.score if hasattr(score, "score") else str(score.get("score", "N/A"))
+            # Handle both Pydantic model and dict formats
+            if hasattr(score, "outlet_name"):
+                outlet = score.outlet_name
+                score_val = score.score
+            elif isinstance(score, dict):
+                outlet = score.get("outlet_name", "Review")
+                score_val = score.get("score", "N/A")
+            else:
+                outlet = "Review"
+                score_val = "N/A"
+
             summaries.append(f"{outlet}: {score_val}")
 
         return ", ".join(summaries)

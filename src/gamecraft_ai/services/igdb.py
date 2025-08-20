@@ -64,7 +64,7 @@ class IGDBService:
             }
 
         except Exception as e:
-            print(f"IGDB search error: {e}")
+            print(f"IGDB search error: {e}, using fallback game data")
             return self._get_fallback_game_data(game_name)
 
     def get_game_details(self, game_id: int) -> dict[str, Any] | None:

@@ -57,7 +57,7 @@ class NodeManager:
         """Thumbnail generation node"""
         try:
             state["current_step"] = "thumbnail_generation"
-            updated_state = self.youtube_coach.generate_thumbnails(dict(state))
+            updated_state = self.youtube_coach.generate_thumbnail_strategies(dict(state))
             state.update(updated_state)  # type: ignore[typeddict-item]
             state["completed_steps"].append("thumbnail_generation")
             return state
