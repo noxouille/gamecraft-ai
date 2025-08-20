@@ -2,21 +2,31 @@ from typing import Any
 
 from ..models import ReviewScore, ScriptOutput
 from ..services.llm import LLMService
+from .base_agent import ScriptWriterAgentBase
 
 
-class ScriptWriterAgent:
+class ScriptWriterAgent(ScriptWriterAgentBase):
     """Enhanced script generation agent that uses research data"""
 
     def __init__(self, llm_service: LLMService):
+        super().__init__("ScriptWriter", llm_service)
         self.llm = llm_service
 
     def write_script(self, state: dict[str, Any]) -> dict[str, Any]:
         """Generate script based on research data"""
+        # Use base agent's process method for enhanced logging
+        return self.process(state)
+
+    def _write_script_internal(self, state: dict[str, Any]) -> dict[str, Any]:
+        """Internal script writing logic with base agent architecture"""
         query = state["query"]
         language = query.language
         duration = query.duration_minutes
         script_format = state["query_metadata"].get("script_format", "review")
         research_type = state.get("research_type", "game")
+
+        # Update processing step
+        state = self._update_processing_step(state, "script_generation")
 
         try:
             if research_type == "game":
@@ -24,16 +34,18 @@ class ScriptWriterAgent:
             elif research_type == "event":
                 script = self._write_event_script(state, language, duration)
             else:
-                state["errors"].append(f"Unknown research type: {research_type}")
-                return state
+                error_msg = f"Unknown research type: {research_type}"
+                return self._add_error(state, error_msg)
 
             if script:
                 state["script"] = script
             else:
-                state["errors"].append("Failed to generate script")
+                error_msg = "Failed to generate script"
+                return self._add_error(state, error_msg)
 
         except Exception as e:
-            state["errors"].append(f"Script generation failed: {str(e)}")
+            error_msg = f"Script generation failed: {str(e)}"
+            return self._add_error(state, error_msg)
 
         return state
 

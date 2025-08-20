@@ -3,6 +3,7 @@ from typing import Any
 
 from ..models import Language, QueryType
 from ..services.llm import LLMService
+from .base_agent import QueryClassifierAgent as BaseQueryClassifierAgent
 
 
 class RelevanceError(Exception):
@@ -11,10 +12,11 @@ class RelevanceError(Exception):
     pass
 
 
-class ClassifierAgent:
-    """Minimal query classification agent"""
+class ClassifierAgent(BaseQueryClassifierAgent):
+    """Query classification agent with enhanced base agent architecture"""
 
     def __init__(self, llm_service: LLMService | None = None, model: str = "gpt-4o-mini"):
+        super().__init__(llm_service, model)
         self.llm = llm_service or LLMService(model=model)
 
     def classify_query(self, state: dict[str, Any]) -> dict[str, Any]:

@@ -5,28 +5,38 @@ from typing import Any
 
 from ..models import ScriptOutput, ThumbnailSuggestion
 from ..services.llm import LLMService
+from .base_agent import YouTubeCoachAgentBase
 
 
-class YouTubeCoachAgent:
+class YouTubeCoachAgent(YouTubeCoachAgentBase):
     """Generates viral thumbnail prompts and YouTube optimization strategies"""
 
     def __init__(self, llm_service: LLMService):
+        super().__init__("YouTubeCoach", llm_service)
         self.llm = llm_service
 
     def generate_thumbnail_strategies(self, state: dict[str, Any]) -> dict[str, Any]:
         """Generate thumbnail prompts and viral strategies based on script and research"""
-        try:
-            script = state.get("script")
-            research_type = state.get("research_type", "game")
-            language = (
-                state.get("query", {}).get("language", "en")
-                if hasattr(state.get("query", {}), "get")
-                else "en"
-            )
+        # Use base agent's process method for enhanced logging
+        return self.process(state)
 
+    def _generate_strategies_internal(self, state: dict[str, Any]) -> dict[str, Any]:
+        """Internal YouTube coaching logic with base agent architecture"""
+        script = state.get("script")
+        research_type = state.get("research_type", "game")
+        language = (
+            state.get("query", {}).get("language", "en")
+            if hasattr(state.get("query", {}), "get")
+            else "en"
+        )
+
+        # Update processing step
+        state = self._update_processing_step(state, "thumbnail_generation")
+
+        try:
             if not script:
-                state["errors"].append("No script available for thumbnail generation")
-                return state
+                error_msg = "No script available for thumbnail generation"
+                return self._add_error(state, error_msg)
 
             # Generate context-aware thumbnails
             if research_type == "game":
@@ -45,8 +55,8 @@ class YouTubeCoachAgent:
             return state
 
         except Exception as e:
-            state["errors"].append(f"Thumbnail generation failed: {str(e)}")
-            return state
+            error_msg = f"Thumbnail generation failed: {str(e)}"
+            return self._add_error(state, error_msg)
 
     def _generate_game_thumbnails(
         self, state: dict[str, Any], language: str

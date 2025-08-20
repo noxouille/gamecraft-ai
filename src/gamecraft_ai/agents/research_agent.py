@@ -8,9 +8,10 @@ from ..models import EventInfo, GameInfo, MediaAsset, QueryType, ReviewScore
 from ..services.igdb import IGDBService
 from ..services.youtube import YouTubeService
 from ..utils.cache import CacheService
+from .base_agent import ResearchAgentBase
 
 
-class ResearchAgent:
+class ResearchAgent(ResearchAgentBase):
     """Unified research agent that handles both game info and event video analysis"""
 
     def __init__(
@@ -19,16 +20,25 @@ class ResearchAgent:
         youtube_service: YouTubeService,
         cache_service: CacheService,
     ):
+        super().__init__("ResearchAgent", igdb_service, youtube_service, cache_service)
         self.igdb = igdb_service
         self.youtube = youtube_service
         self.cache = cache_service
 
     def conduct_research(self, state: dict[str, Any]) -> dict[str, Any]:
         """Main research method that handles both game and event queries"""
+        # Use base agent's process method for enhanced logging
+        return self.process(state)
+
+    def _conduct_research_internal(self, state: dict[str, Any]) -> dict[str, Any]:
+        """Internal research logic with base agent architecture"""
         query = state["query"]
         query_type = query.query_type
         # Convert Language enum to string value
         language = query.language.value if hasattr(query.language, "value") else str(query.language)
+
+        # Update processing step
+        state = self._update_processing_step(state, "research")
 
         try:
             if query_type == QueryType.GAME:
@@ -36,11 +46,11 @@ class ResearchAgent:
             elif query_type == QueryType.EVENT:
                 return self._research_event_content(state, language)
             else:
-                state["errors"].append("Unknown query type for research")
-                return state
+                error_msg = "Unknown query type for research"
+                return self._add_error(state, error_msg)
         except Exception as e:
-            state["errors"].append(f"Research failed: {str(e)}")
-            return state
+            error_msg = f"Research failed: {str(e)}"
+            return self._add_error(state, error_msg)
 
     def _research_game_content(self, state: dict[str, Any], language: str) -> dict[str, Any]:
         """Research content for game queries"""
