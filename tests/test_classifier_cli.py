@@ -57,19 +57,21 @@ def test_classifier(query_text: str, duration: int = 10, model: str = "gpt-4o-mi
 
         # Show the flow based on query type
         print("\n" + "=" * 50)
-        print("📈 WORKFLOW PATH:")
+        print("📈 COMPLETE WORKFLOW PATH:")
         if classified_query.query_type == QueryType.EVENT:
             print("🎪 Event Analysis Flow:")
-            print("   1. Research Agent → Analyze event video")
-            print("   2. Script Writer → Create event summary script")
-            print("   3. YouTube Coach → Generate viral thumbnails")
+            print("   1. ✅ Classifier Agent → Query validated and classified")
+            print("   2. 🔍 Research Agent → Analyze event video & gather info")
+            print("   3. ✍️  Script Writer → Create event summary script")
+            print("   4. 🖼️  YouTube Coach → Generate viral thumbnail prompts")
         else:
             print("🎮 Game Content Flow:")
-            print("   1. Research Agent → Gather game information")
-            print("   2. Script Writer → Create game review/preview script")
-            print("   3. YouTube Coach → Generate viral thumbnails")
+            print("   1. ✅ Classifier Agent → Query validated and classified")
+            print("   2. 🔍 Research Agent → Gather game information & media")
+            print("   3. ✍️  Script Writer → Create game review/preview script")
+            print("   4. 🖼️  YouTube Coach → Generate viral thumbnail prompts")
 
-        print("\n🎉 Ready to proceed with workflow!")
+        print("\n🎉 Ready to proceed with complete 4-agent workflow!")
 
     except RelevanceError as e:
         print("❌ RELEVANCE CHECK FAILED")

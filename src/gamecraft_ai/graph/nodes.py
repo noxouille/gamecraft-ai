@@ -1,4 +1,4 @@
-from ..agents import ClassifierAgent, ResearchAgent, ScriptWriterAgent
+from ..agents import ClassifierAgent, ResearchAgent, ScriptWriterAgent, YouTubeCoachAgent
 from .state import GameCraftState
 
 
@@ -10,10 +10,12 @@ class NodeManager:
         classifier: ClassifierAgent,
         researcher: ResearchAgent,
         script_writer: ScriptWriterAgent,
+        youtube_coach: YouTubeCoachAgent,
     ):
         self.classifier = classifier
         self.researcher = researcher
         self.script_writer = script_writer
+        self.youtube_coach = youtube_coach
 
     def classify_node(self, state: GameCraftState) -> GameCraftState:
         """Query classification node"""
@@ -51,6 +53,18 @@ class NodeManager:
             state["errors"].append(f"Script generation error: {str(e)}")
             return state
 
+    def thumbnail_generation_node(self, state: GameCraftState) -> GameCraftState:
+        """Thumbnail generation node"""
+        try:
+            state["current_step"] = "thumbnail_generation"
+            updated_state = self.youtube_coach.generate_thumbnails(dict(state))
+            state.update(updated_state)  # type: ignore[typeddict-item]
+            state["completed_steps"].append("thumbnail_generation")
+            return state
+        except Exception as e:
+            state["errors"].append(f"Thumbnail generation error: {str(e)}")
+            return state
+
     def finish_node(self, state: GameCraftState) -> GameCraftState:
         """Final processing node"""
         state["current_step"] = "finished"
@@ -81,3 +95,12 @@ def should_continue_to_script(state: GameCraftState) -> str:
         return "finish"
     else:
         return "script_generation"
+
+
+def should_continue_to_thumbnails(state: GameCraftState) -> str:
+    """Conditional edge function for thumbnail generation"""
+    if state["errors"]:
+        # Skip to finish if there are errors
+        return "finish"
+    else:
+        return "thumbnail_generation"

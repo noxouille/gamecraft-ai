@@ -3,10 +3,15 @@ from typing import Any
 
 from langgraph.graph import END, StateGraph
 
-from ..agents import ClassifierAgent, ResearchAgent, ScriptWriterAgent
+from ..agents import ClassifierAgent, ResearchAgent, ScriptWriterAgent, YouTubeCoachAgent
 from ..services import IGDBService, LLMService, YouTubeService
 from ..utils.cache import CacheService
-from .nodes import NodeManager, should_continue_to_research, should_continue_to_script
+from .nodes import (
+    NodeManager,
+    should_continue_to_research,
+    should_continue_to_script,
+    should_continue_to_thumbnails,
+)
 from .state import GameCraftState, create_initial_state
 
 
@@ -24,9 +29,12 @@ class WorkflowManager:
         self.classifier = ClassifierAgent(self.llm_service)
         self.researcher = ResearchAgent(self.igdb_service, self.youtube_service, self.cache_service)
         self.script_writer = ScriptWriterAgent(self.llm_service)
+        self.youtube_coach = YouTubeCoachAgent(self.llm_service)
 
         # Initialize node manager
-        self.node_manager = NodeManager(self.classifier, self.researcher, self.script_writer)
+        self.node_manager = NodeManager(
+            self.classifier, self.researcher, self.script_writer, self.youtube_coach
+        )
 
         # Create workflow
         self.workflow = self._create_workflow()
@@ -40,6 +48,7 @@ class WorkflowManager:
         workflow.add_node("classify", self.node_manager.classify_node)
         workflow.add_node("research", self.node_manager.research_node)
         workflow.add_node("script_generation", self.node_manager.script_generation_node)
+        workflow.add_node("thumbnail_generation", self.node_manager.thumbnail_generation_node)
         workflow.add_node("finish", self.node_manager.finish_node)
 
         # Set entry point
@@ -59,8 +68,15 @@ class WorkflowManager:
             {"script_generation": "script_generation", "finish": "finish"},
         )
 
-        # Script generation always goes to finish
-        workflow.add_edge("script_generation", "finish")
+        # Script generation goes to thumbnail generation
+        workflow.add_conditional_edges(
+            "script_generation",
+            should_continue_to_thumbnails,
+            {"thumbnail_generation": "thumbnail_generation", "finish": "finish"},
+        )
+
+        # Thumbnail generation always goes to finish
+        workflow.add_edge("thumbnail_generation", "finish")
 
         # Finish is terminal
         workflow.add_edge("finish", END)
@@ -82,6 +98,7 @@ class WorkflowManager:
                 self.igdb_service, self.youtube_service, self.cache_service
             )
             self.script_writer = ScriptWriterAgent(self.llm_service)
+            self.youtube_coach = YouTubeCoachAgent(self.llm_service)
 
         # Create initial state
         initial_state = create_initial_state(query_text, duration_minutes)
