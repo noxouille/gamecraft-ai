@@ -137,10 +137,9 @@ class YouTubeCoachAgent:
     ) -> list[ThumbnailSuggestion]:
         """Generate thumbnail suggestions for event content"""
         event_info = state.get("event_info")
-        game_info_list = state.get("game_info", [])
 
         event_title = self._extract_value(event_info, "title", "Gaming Event")
-        announced_games = self._extract_value(event_info, "announced_games", [])
+        announced_games = event_info.get("announced_games", []) if event_info else []
 
         thumbnails = []
 
@@ -274,7 +273,9 @@ class YouTubeCoachAgent:
     def _extract_value(self, obj, attr: str, default: str) -> str:
         """Safely extract value from object or dict"""
         if hasattr(obj, attr):
-            return getattr(obj, attr) or default
+            result = getattr(obj, attr)
+            return str(result) if result is not None else default
         elif isinstance(obj, dict):
-            return obj.get(attr, default)
+            result = obj.get(attr, default)
+            return str(result) if result is not None else default
         return default

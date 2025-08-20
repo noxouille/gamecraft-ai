@@ -16,7 +16,7 @@ class CacheService:
 
         if self._use_redis:
             try:
-                import redis
+                import redis  # type: ignore
 
                 self._redis = redis.from_url(settings.redis_url)
                 self._redis.ping()  # Test connection

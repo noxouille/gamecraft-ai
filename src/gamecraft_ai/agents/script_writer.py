@@ -13,7 +13,6 @@ class ScriptWriterAgent:
     def write_script(self, state: dict[str, Any]) -> dict[str, Any]:
         """Generate script based on research data"""
         query = state["query"]
-        query_type = query.query_type
         language = query.language
         duration = query.duration_minutes
         script_format = state["query_metadata"].get("script_format", "review")
@@ -113,14 +112,16 @@ class ScriptWriterAgent:
     def _extract_value(self, obj, attr: str, default: str) -> str:
         """Safely extract value from object or dict"""
         if hasattr(obj, attr):
-            return getattr(obj, attr) or default
+            result = getattr(obj, attr)
+            return str(result) if result is not None else default
         elif isinstance(obj, dict):
-            return obj.get(attr, default)
+            result = obj.get(attr, default)
+            return str(result) if result is not None else default
         return default
 
     def _extract_platforms(self, game_info) -> str:
         """Extract and format platforms"""
-        platforms = self._extract_value(game_info, "platforms", [])
+        platforms = game_info.get("platforms", []) if game_info else []
         if isinstance(platforms, list) and platforms:
             return ", ".join(platforms)
         elif platforms:
@@ -165,8 +166,8 @@ class ScriptWriterAgent:
 
             # Extract event data
             event_title = self._extract_value(event_info, "title", "Gaming Event")
-            announced_games = self._extract_value(event_info, "announced_games", [])
-            highlights = self._extract_value(event_info, "highlights", [])
+            announced_games = event_info.get("announced_games", []) if event_info else []
+            highlights = event_info.get("highlights", []) if event_info else []
 
             # Build game details from research
             game_details = []

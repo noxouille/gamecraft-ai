@@ -409,6 +409,7 @@ dependencies = [
     { name = "pydantic-settings" },
     { name = "pytest" },
     { name = "pytest-cov" },
+    { name = "types-redis" },
     { name = "typing-extensions" },
 ]
 
@@ -449,6 +450,7 @@ requires-dist = [
     { name = "pytest-cov", marker = "extra == 'dev'", specifier = ">=4.0.0" },
     { name = "redis", marker = "extra == 'redis'", specifier = ">=4.5.0" },
     { name = "ruff", marker = "extra == 'dev'", specifier = ">=0.1.0" },
+    { name = "types-redis", specifier = ">=4.6.0.20241004" },
     { name = "typing-extensions", specifier = ">=4.5.0" },
 ]
 provides-extras = ["dev", "redis"]
